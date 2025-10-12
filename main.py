@@ -27,8 +27,19 @@ def ExamStart():
     end= startTimeALL+time_interval1
     startTime=startTimeALL.time()
     endTime=end.time()
-    print(startTime)
+    print(type(startTime))
     print(endTime)
+    root.destroy()
+    countDownWindow=Tk()
+    now = datetime.now()    
+    if now < startTimeALL:#当开始时间比现在小（还未开始）
+        print("a")
+    elif now.time() <= endTime:#当考试进行中
+        print("b")
+    else:#考试结束
+        pass
+
+    countDownWindow.mainloop()
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
