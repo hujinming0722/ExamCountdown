@@ -26,19 +26,22 @@ ButtonOfExit.grid(row=4,column=0,sticky=E)
 
 def ExamStart():
     
-    startTimeALL=datetime.strptime(EntryStartTime.get(),"%H:%M")
-    time_interval1 = timedelta(minutes=int(EntryMinutes.get()))
-    end= startTimeALL+time_interval1
-    
-    startTime=startTimeALL.time()
+    startTimeALL=datetime.strptime(EntryStartTime.get(),"%H:%M")#获取输入并转换为'datetime.datetime
+    time_interval1 = timedelta(minutes=int(EntryMinutes.get()))#将用户输入考试时长的数字转换为时间
+    end= startTimeALL+time_interval1 #相加以计算出datetime形式的考试结束时间
+    startTime=startTimeALL.time() #把前面内俩转换为time格式
     endTime=end.time()
-    Testseconds = time_interval1.total_seconds()
-    print(type(startTime))
+
+#MD，Windowsapp远程桌面太难用了，输入法不好切而且还无法把键盘直接传入，Fu** microsoft
+
+    Testseconds = time_interval1.total_seconds()#将用户输入的分钟转为秒(浮点数形式)
+    print(type(startTime)) #调试时瞎写的
     print(endTime)
     print(Testseconds)
-    root.destroy()
+
+    root.destroy() #可以在root窗口下计算的工作完成之后关闭root
     countDownWindow=Tk()
-    now = datetime.now()    
+    now = datetime.now()    #获取datetime格式的现在的时间
     if now < startTimeALL:#当开始时间比现在小（还未开始）
         print("a")
         timeLABEL=Label(countDownWindow,text="Test Not start",font=("TkDefaultFont",64))
