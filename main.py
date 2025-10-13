@@ -47,12 +47,10 @@ def ExamStart():
         timeLABEL=Label(countDownWindow,text="Test Not start",font=("TkDefaultFont",64))
     elif now.time() <= endTime:#当考试进行中
         print("b")
+        def co
         timeLABEL=Label(countDownWindow,text="time",font=("TkDefaultFont",64))
         timeLABEL.grid(row=0,column=0)
-        keeptime = Testseconds
-        start_time= 0
-        remaining_time = keeptime -  
-        if a : 
+        
     else:#考试结束
         pass
 
