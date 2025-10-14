@@ -35,20 +35,29 @@ def ExamStart():
 #MD，Windowsapp远程桌面太难用了，输入法不好切而且还无法把键盘直接传入，Fu** microsoft
 
     Testseconds = time_interval1.total_seconds()#将用户输入的分钟转为秒(浮点数形式)
-    print(type(startTime)) #调试时瞎写的
-    print(endTime)
+    print(type(startTimeALL)) #调试时瞎写的
+    print(startTimeALL)
     print(Testseconds)
 
     root.destroy() #可以在root窗口下计算的工作完成之后关闭root
     countDownWindow=Tk()
     now = datetime.now()    #获取datetime格式的现在的时间
-    if now < startTimeALL:#当开始时间比现在小（还未开始）
+    if now.time() < startTime:#当开始时间比现在小（还未开始）
         print("a")
+        today=now.date()
+        startTimeplusdate=datetime.combine(today,startTime)
+        
         timeLABEL=Label(countDownWindow,text="Test Not start",font=("TkDefaultFont",64))
-    elif now.time() <= endTime:#当考试进行中
+        timeLABEL.grid(row=0,column=0)
+        wiattime=startTime-now.time()
+        print(wiattime)
+        countDownWindow.after 
+        #if now.time() == startTime  
+    elif now.time() == startTime:#当考试进行中
         print("b")
         # 更新标签显示
-
+        timeLABEL=Label(countDownWindow,text="考试结束！",font=("TkDefaultFont",64))
+        timeLABEL.grid(row=0,column=0)
         def count_down(REMSEC):
             minutes = REMSEC // 60
             secs = REMSEC % 60
@@ -60,7 +69,7 @@ def ExamStart():
             else:
                 timeLABEL.config(text="考试结束！")
         REMSEC= int(Testseconds)
-        timeLABEL=Label(text="考试结束！",font=("TkDefaultFont",64))
+        
         count_down(REMSEC)
         timeLABEL.grid(row=0,column=0)
         
