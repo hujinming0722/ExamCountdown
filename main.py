@@ -47,12 +47,24 @@ def ExamStart():
         timeLABEL=Label(countDownWindow,text="Test Not start",font=("TkDefaultFont",64))
     elif now.time() <= endTime:#当考试进行中
         print("b")
-        def co
-        timeLABEL=Label(countDownWindow,text="time",font=("TkDefaultFont",64))
+        # 更新标签显示
+
+        def count_down(REMSEC):
+            minutes = REMSEC // 60
+            secs = REMSEC % 60
+            timeLABEL.config(text=f"考试时间还有{minutes}:{secs}")
+    
+            if REMSEC > 0:
+                # 1秒后（1000毫秒）再次调用count_down，秒数减1
+                countDownWindow.after(1000, count_down, REMSEC - 1)
+            else:
+                timeLABEL.config(text="考试结束！")
+        REMSEC= int(Testseconds)
+        timeLABEL=Label(text="考试结束！",font=("TkDefaultFont",64))
+        count_down(REMSEC)
         timeLABEL.grid(row=0,column=0)
         
-    else:#考试结束
-        pass
+
 
     countDownWindow.mainloop()
 
