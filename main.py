@@ -31,10 +31,20 @@ def ExamStart():
     end= startTimeALL+time_interval1 #相加以计算出datetime形式的考试结束时间
     startTime=startTimeALL.time() #把前面内俩转换为time格式
     endTime=end.time()
+    def count_down(REMSEC):
+            minutes = REMSEC // 60
+            secs = REMSEC % 60
+            timeLABEL.config(text=f"考试时间还有{minutes}:{secs}")
+    
+            if REMSEC > 0:
+                # 1秒后（1000毫秒）再次调用count_down，秒数减1
+                countDownWindow.after(1000, count_down, REMSEC - 1)
+            else:
+                timeLABEL.config(text="考试结束！")
 
 #MD，Windowsapp远程桌面太难用了，输入法不好切而且还无法把键盘直接传入，Fu** microsoft
 
-    Testseconds = time_interval1.total_seconds()#将用户输入的分钟转为秒(浮点数形式)
+    Testseconds = int(time_interval1.total_seconds())#将用户输入的分钟转为秒(浮点数形式)
     print(type(startTimeALL)) #调试时瞎写的
     print(startTimeALL)
     print(Testseconds)
@@ -49,25 +59,18 @@ def ExamStart():
         
         timeLABEL=Label(countDownWindow,text="Test Not start",font=("TkDefaultFont",64))
         timeLABEL.grid(row=0,column=0)
-        wiattime=startTime-now.time()
-        print(wiattime)
-        countDownWindow.after 
+        today = now.date()
+        start_datetime = datetime.combine(today, startTime)  # 组合成完整 datetime
+        current_datetime = now  # 现在的完整 datetime
+        wait_seconds = (start_datetime - current_datetime).total_seconds()
+        countDownWindow.after(int(wait_seconds * 1000), count_down, Testseconds)
         #if now.time() == startTime  
     elif now.time() == startTime:#当考试进行中
         print("b")
         # 更新标签显示
         timeLABEL=Label(countDownWindow,text="考试结束！",font=("TkDefaultFont",64))
         timeLABEL.grid(row=0,column=0)
-        def count_down(REMSEC):
-            minutes = REMSEC // 60
-            secs = REMSEC % 60
-            timeLABEL.config(text=f"考试时间还有{minutes}:{secs}")
-    
-            if REMSEC > 0:
-                # 1秒后（1000毫秒）再次调用count_down，秒数减1
-                countDownWindow.after(1000, count_down, REMSEC - 1)
-            else:
-                timeLABEL.config(text="考试结束！")
+        
         REMSEC= int(Testseconds)
         
         count_down(REMSEC)
