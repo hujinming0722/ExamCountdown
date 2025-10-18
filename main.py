@@ -1,6 +1,7 @@
 from tkinter import Tk,Label,N,E,W,S,Entry,Button
 from datetime import datetime,timedelta
 root=Tk()
+root.title("ExamCountdown")
 title1=Label(text="请输入有关此次考试的信息",font=("TkDefaultFont",32))
 title1.grid(row=0,column=0,sticky=N)
 tip1=Label(text="请输入此次考试的科目",font=("TkDefaultFont",16))
@@ -56,6 +57,7 @@ def ExamStart():
     root.destroy() #可以在root窗口下计算的工作完成之后关闭root
     countDownWindow=Tk()
     now = datetime.now()    #获取datetime格式的现在的时间
+    countDownWindow.title("ExamCountdown")
 
     
     if now.time() < startTime:#当开始时间比现在小（还未开始）
