@@ -56,44 +56,64 @@ def ExamStart():
     root.destroy() #可以在root窗口下计算的工作完成之后关闭root
     countDownWindow=Tk()
     now = datetime.now()    #获取datetime格式的现在的时间
-    
+
     
     if now.time() < startTime:#当开始时间比现在小（还未开始）
         print("a")
         today=now.date()
-        startTimeplusdate=datetime.combine(today,startTime)
         
         timeLABEL=Label(countDownWindow,text=f"考试将在{start_time_input}开始",font=("TkDefaultFont",64))
-        timeLABEL.grid(row=0,column=0)
+        timeLABEL.grid(row=0,column=0,sticky="nsew")
         today = now.date()
         start_datetime = datetime.combine(today, startTime)  # 组合成完整 datetime
         current_datetime = now  # 现在的完整 datetime
         wait_seconds = (start_datetime - current_datetime).total_seconds()
         countDownWindow.after(int(wait_seconds * 1000), count_down, Testseconds)
-        subjectlabel=Label(countDownWindow,text=f"{subject_text}",font=("TkDefaultFont",64))
+        subjectlabel=Label(countDownWindow,text=f"{subject_text}",font=("TkDefaultFont",64)) #
         subjectlabel.grid(row=1,column=0)
-        #if now.time() == startTime  
+        countDownWindow.grid_columnconfigure(0,weight=1) #设置权重以在全屏时居中显示
+        countDownWindow.grid_rowconfigure(0,weight=1)
+        countDownWindow.grid_rowconfigure(1,weight=1)
     elif now.time() == startTime or now.time() > startTime < endTime :#当考试进行中
         print("b")
         # 更新标签显示
         timeLABEL=Label(countDownWindow,text="考试结束！",font=("TkDefaultFont",64))
         timeLABEL.grid(row=0,column=0)
-        
-        REMSEC= int(Testseconds)
+        current_time = datetime.combine(now.date(), now.time())
+        end_datetime = datetime.combine(now.date(), endTime)
+        remaining = int((end_datetime - current_time).total_seconds())
+        REMSEC = remaining if remaining > 0 else 0
         subjectlabel=Label(countDownWindow,text=f"{subject_text}",font=("TkDefaultFont",64))
         count_down(REMSEC)
         timeLABEL.grid(row=0,column=0)
         subjectlabel.grid(row=1,column=0)
+        countDownWindow.grid_columnconfigure(0,weight=1)
+        countDownWindow.grid_rowconfigure(0,weight=1)
+        countDownWindow.grid_rowconfigure(1,weight=1)   
         
+        countDownWindow.update_idletasks()
+    
+    
+    screen_width = countDownWindow.winfo_screenwidth()
+    screen_height = countDownWindow.winfo_screenheight()
+    window_width = countDownWindow.winfo_reqwidth()
+    window_height = countDownWindow.winfo_reqheight()
+    windowX = int((screen_width - window_width) / 2)
+    windowY = int((screen_height - window_height) / 2)
+    countDownWindow.geometry(f"+{windowX}+{windowY}")
         
-        
-
 
     countDownWindow.mainloop()
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
 
-
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+window_width = root.winfo_reqwidth()
+window_height = root.winfo_reqheight()
+windowX = int((screen_width - window_width) / 2)
+windowY = int((screen_height - window_height) / 2)
+root.geometry(f"+{windowX}+{windowY}")
 
 root.mainloop()
