@@ -26,6 +26,7 @@ ButtonOfExit=Button(text="退出",command=root.destroy)
 ButtonOfExit.grid(row=4,column=0,sticky=E)
 
 
+
 def ExamStart():
     start_time_input = EntryStartTime.get()  # 保存开始时间输入值
     minutes_input = EntryMinutes.get()       # 保存时长输入值
