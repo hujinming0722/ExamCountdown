@@ -38,7 +38,7 @@ def ExamStart():
     end= startTimeALL+time_interval1 #相加以计算出datetime形式的考试结束时间
     startTime=startTimeALL.time() #把前面内俩转换为time格式
     endTime=end.time()
-    def count_down(REMSEC):
+    def count_down(REMSEC): # 倒计时程序主函数，但体力拎出来为了方便调试，这个函数的部分pylance忽略即可
             minutes = REMSEC // 60
             secs = REMSEC % 60
             timeLABEL.config(text=f"考试时间还有{minutes}:{secs}")
@@ -61,7 +61,6 @@ def ExamStart():
 
     
     if now.time() < startTime:#当开始时间比现在小（还未开始）
-        print("a")
         today=now.date()
         
         timeLABEL=Label(countDownWindow,text=f"考试将在{start_time_input}开始",font=("TkDefaultFont",64))
@@ -77,7 +76,6 @@ def ExamStart():
         countDownWindow.grid_rowconfigure(0,weight=1)
         countDownWindow.grid_rowconfigure(1,weight=1)
     elif now.time() == startTime or now.time() > startTime < endTime :#当考试进行中
-        print("b")
         # 更新标签显示
         timeLABEL=Label(countDownWindow,text="考试结束！",font=("TkDefaultFont",64))
         timeLABEL.grid(row=0,column=0)
