@@ -1,6 +1,6 @@
 from tkinter import Tk,Label,N,E,W,Entry,Button, messagebox
 from datetime import datetime,timedelta
-#import json
+import json
 root=Tk()
 root.title("ExamCountdown")
 title1=Label(text="请输入有关此次考试的信息",font=("TkDefaultFont",32))
@@ -111,6 +111,10 @@ def ExamStart():
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
+ButtonOfMakelist=Button(text="设定多日或多次考试")
+ButtonOfReadlist=Button(text="读取多日或多次考试并开始")
+ButtonOfMakelist.grid(row=4,column=2,sticky=E)
+ButtonOfReadlist.grid(row=4,column=3,sticky=E)
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
