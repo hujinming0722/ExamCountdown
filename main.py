@@ -1,5 +1,6 @@
-from tkinter import Tk,Label,N,E,W,Entry,Button
+from tkinter import Tk,Label,N,E,W,Entry,Button, messagebox
 from datetime import datetime,timedelta
+#import json
 root=Tk()
 root.title("ExamCountdown")
 title1=Label(text="请输入有关此次考试的信息",font=("TkDefaultFont",32))
@@ -7,7 +8,7 @@ title1.grid(row=0,column=0,sticky=N)
 tip1=Label(text="请输入此次考试的科目",font=("TkDefaultFont",16))
 tip1.grid(row=1,column=0,sticky=W)
 EntrySub=Entry(font=("TkDefaultFont",16),width=5)
-EntrySub.grid(row=1,column=1)#这个还没用上 
+EntrySub.grid(row=1,column=1)
 tip1=Label(text="请输入此次考试以分钟计算的时长",font=("TkDefaultFont",16))
 tip1.grid(row=2,column=0,sticky=W)
 EntryMinutes=Entry(font=("TkDefaultFont",16),width=5)
@@ -29,6 +30,8 @@ def ExamStart():
     start_time_input = EntryStartTime.get()  # 保存开始时间输入值
     minutes_input = EntryMinutes.get()       # 保存时长输入值
     subject_input = EntrySub.get()           # 保存科目输入值
+    if ":" not in start_time_input:
+        messagebox.showerror("错误","您需要输入正确的时间格式,冒号应该为英文冒号，请在输入时切换为英文输入法以规避此问题。")   
     subject_text = f"本场考试的科目是{subject_input}" if subject_input else "未输入考试科目"
     print(subject_input)
     
