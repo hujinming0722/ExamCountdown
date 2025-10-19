@@ -1,4 +1,4 @@
-from tkinter import Tk,Label,N,E,W,S,Entry,Button
+from tkinter import Tk,Label,N,E,W,Entry,Button
 from datetime import datetime,timedelta
 root=Tk()
 root.title("ExamCountdown")
@@ -33,8 +33,8 @@ def ExamStart():
     print(subject_input)
     
     
-    startTimeALL=datetime.strptime(EntryStartTime.get(),"%H:%M")#获取输入并转换为'datetime.datetime
-    time_interval1 = timedelta(minutes=int(EntryMinutes.get()))#将用户输入考试时长的数字转换为时间
+    startTimeALL=datetime.strptime(start_time_input,"%H:%M")#获取输入并转换为'datetime.datetime
+    time_interval1 = timedelta(minutes=int(minutes_input))#将用户输入考试时长的数字转换为时间
     end= startTimeALL+time_interval1 #相加以计算出datetime形式的考试结束时间
     startTime=startTimeALL.time() #把前面内俩转换为time格式
     endTime=end.time()
