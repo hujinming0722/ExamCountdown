@@ -1,6 +1,6 @@
 import json
 import os
-from tkinter import Tk, Frame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W
+from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk
 from tkcalendar import DateEntry  # 需安装：pip install tkcalendar
 from datetime import datetime#
 root=Tk()
@@ -112,6 +112,20 @@ def ExamStart():
     countDownWindow.mainloop()
 #这段有关多日设置
 
+
+# 全局配置
+JSON_PATH = "exam_schedule.json"
+DATE_FORMAT = "%Y-%m-%d"
+TIME_FORMAT = "%H:%M"
+
+# 全局变量
+data = {}  # 存储结构: {日期: [考试信息列表]}
+current_date = None
+date_listbox = None
+time_tree = None
+add_time_btn = None
+
+
 def load_data():
     """加载已有数据"""
     if os.path.exists(JSON_PATH):
@@ -151,7 +165,7 @@ def on_date_select(event):
 
 def add_date():
     """添加考试日期"""
-    top = Toplevel(root)
+    top = Toplevel()
     top.title("选择日期")
     top.grid_columnconfigure(0, weight=1)
     
@@ -177,7 +191,7 @@ def add_time():
     if not current_date:
         return
     
-    top = Toplevel(root)
+    top = Toplevel(setofdayWindow)
     top.title("添加考试时间")
     top.geometry("300x300")
     top.grid_columnconfigure(1, weight=1)
@@ -242,17 +256,75 @@ def save_data():
         messagebox.showinfo("成功", f"已保存到 {JSON_PATH}")
     except Exception as e:
         messagebox.showerror("错误", f"保存失败：{str(e)}")
-def Settonsofday() -> None:
-    setofdayWindow=Tk()
+
+data = load_data()
+def Settonsofday():
+    setofdayWindow = Tk()
+    setofdayWindow.title("考试时间录入")
+    setofdayWindow.geometry("800x500")
+    setofdayWindow.grid_rowconfigure(1, weight=1)  # 内容区域自适应高度
+
+
+
+        # 左侧日期列表区域（占1列）
+    setofdayWindow.grid_columnconfigure(0, minsize=200)  # 固定最小宽度
+    Label(setofdayWindow, text="考试日期列表", font=("SimHei", 12)).grid(
+    row=0, column=0,sticky="nw")
+
+# 日期列表（带滚动条）
+    date_frame = LabelFrame(setofdayWindow)
+    date_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+    date_frame.grid_rowconfigure(0, weight=1)   
+    date_frame.grid_columnconfigure(0, weight=1)
+
+    date_scroll = Scrollbar(date_frame)
+    date_scroll.grid(row=0, column=1, sticky="ns")
+    date_listbox = Listbox(
+        date_frame, selectmode=SINGLE, yscrollcommand=date_scroll.set, height=15)
+    date_listbox.grid(row=0, column=0, sticky="nsew")
+    date_scroll.config(command=date_listbox.yview)
+    date_listbox.bind('<<ListboxSelect>>', on_date_select)
+
+    # 添加日期按钮
+    Button(setofdayWindow, text="+ 添加日期", command=add_date).grid(
+        row=2, column=0, padx=10, pady=10, sticky="ew")
+
+    # 右侧单    科时间区域（占1列）
+    setofdayWindow.grid_columnconfigure(1, weight=1)  # 自适应宽度
+    Label(setofdayWindow, text="单科考试时间", font=("SimHei", 12)).grid(
+        row=0, column=1,sticky="nw")
+
+    # 单科时间表格
+
+    tree_frame = LabelFrame(setofdayWindow)
+    tree_frame.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+    tree_frame.grid_rowconfigure(0, weight=1)
+    tree_frame.grid_columnconfigure(0, weight=1)
+
+    columns = ("科目", "开始时间", "时长(分钟)")
+    time_tree = ttk.Treeview(
+        tree_frame, columns=columns, show="headings", height=10
+    )
+    for col in columns:
+        time_tree.heading(col, text=col)
+        time_tree.column(col, width=150)
+    time_tree.grid(row=0, column=0, sticky="nsew")
+
+    # 添加单科时间按钮
+    add_time_btn = Button(setofdayWindow, text="+ 添加单科时间", command=add_time, state="disabled")
+    add_time_btn.grid(row=2, column=1, padx=10, pady=10, sticky="w")
+
+    # 保存按钮
+    Button(setofdayWindow, text="保存", command=save_data).grid(row=2, column=1, padx=10, pady=10, sticky="e")
+
+    # 初始化
     
-    screen_width = setofdayWindow.winfo_screenwidth()
-    screen_height = setofdayWindow.winfo_screenheight()
-    window_width = setofdayWindow.winfo_reqwidth()
-    window_height = setofdayWindow.winfo_reqheight()
-    windowX = int((screen_width - window_width) / 2)
-    windowY = int((screen_height - window_height) / 2)
-    setofdayWindow.geometry(f"+{windowX}+{windowY}")
+    refresh_date_list()
+
     setofdayWindow.mainloop()
+
+
+
 ButtonOfStart=Button(text="开始考试",command=ExamStart)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
 ButtonOfMakelist=Button(text="设定多日或多次考试",command=Settonsofday)
