@@ -117,7 +117,6 @@ def ExamStart():
 def Settonsofday():
     # 全局配置
     
-    DATE_FORMAT = "%Y-%m-%d"
     TIME_FORMAT = "%H:%M"
 
     # 全局变量
