@@ -1,8 +1,8 @@
 import json
 import os
 from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel
-from tkcalendar import DateEntry  
-from datetime import datetime#
+
+from datetime import datetime,date
 JSON_PATH = "exam_schedule.json"
 root=Tk()
 root.title("ExamCountdown")
@@ -114,12 +114,6 @@ def ExamStart():
 #这段有关多日设置
 
 
-
-
-
-
-
-
 def Settonsofday():
     # 全局配置
     
@@ -140,7 +134,7 @@ def Settonsofday():
                     return json.load(f)
             except:
                 return {}
-            return {}
+        return {}
 
 
     def refresh_date_list():
@@ -176,7 +170,10 @@ def Settonsofday():
         top.grid_columnconfigure(0, weight=1)
     
         Label(top, text="请选择考试日期：").grid(row=0, column=0, pady=10, padx=10, sticky="n")
-        cal = DateEntry(top, date_pattern="yyyy-mm-dd", width=12)
+
+        cal = Entry(top, width=12)
+        seetoday=str(date.today())
+        cal.insert(0,seetoday)
         cal.grid(row=1, column=0, pady=10)
     
         def confirm():
