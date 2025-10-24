@@ -3,6 +3,7 @@ import os
 from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel
 from tkcalendar import DateEntry  
 from datetime import datetime#
+JSON_PATH = "exam_schedule.json"
 root=Tk()
 root.title("ExamCountdown")
 title1=Label(text="请输入有关此次考试的信息",font=("TkDefaultFont",32))
@@ -121,7 +122,7 @@ def ExamStart():
 
 def Settonsofday():
     # 全局配置
-    JSON_PATH = "exam_schedule.json"
+    
     DATE_FORMAT = "%Y-%m-%d"
     TIME_FORMAT = "%H:%M"
 
