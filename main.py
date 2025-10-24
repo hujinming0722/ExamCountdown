@@ -180,7 +180,6 @@ def Settonsofday():
             if date not in data:
                 data[date] = []
                 refresh_date_list()
-                messagebox.showinfo("提示", f"已添加日期：{date}")
             else:
                 messagebox.showwarning("提示", f"日期 {date} 已存在")
             top.destroy()
@@ -240,7 +239,6 @@ def Settonsofday():
                 "duration": duration
             })
             on_date_select(None)
-            messagebox.showinfo("提示", "添加成功")
             top.destroy()
     
         Button(top, text="确认", command=confirm).grid(row=3, column=0, columnspan=2, pady=20)
@@ -255,7 +253,7 @@ def Settonsofday():
         try:
             with open(JSON_PATH, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            messagebox.showinfo("成功", f"已保存到 {JSON_PATH}")
+            messagebox.showinfo("考试文件已经被保存至程序所在目录", f"已保存到 {JSON_PATH}")
         except Exception as e:
             messagebox.showerror("错误", f"保存失败：{str(e)}")
     setofdayWindow = Tk()
