@@ -1,7 +1,7 @@
 import json
 import os
-from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk
-from tkcalendar import DateEntry  # 需安装：pip install tkcalendar
+from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel
+from tkcalendar import DateEntry  
 from datetime import datetime#
 root=Tk()
 root.title("ExamCountdown")
@@ -113,152 +113,154 @@ def ExamStart():
 #这段有关多日设置
 
 
-# 全局配置
-JSON_PATH = "exam_schedule.json"
-DATE_FORMAT = "%Y-%m-%d"
-TIME_FORMAT = "%H:%M"
-
-# 全局变量
-data = {}  # 存储结构: {日期: [考试信息列表]}
-current_date = None
-date_listbox = None
-time_tree = None
-add_time_btn = None
 
 
-def load_data():
-    """加载已有数据"""
-    if os.path.exists(JSON_PATH):
-        try:
-            with open(JSON_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
 
 
-def refresh_date_list():
-    """刷新日期列表"""
-    date_listbox.delete(0, END)
-    for date in sorted(data.keys()):
-        date_listbox.insert(END, date)
 
 
-def on_date_select(event):
-    """处理日期选择事件"""
-    global current_date
-    selected = date_listbox.curselection()
-    if not selected:
-        current_date = None
-        add_time_btn.config(state="disabled")
-        return
-
-    current_date = date_listbox.get(selected[0])
-    add_time_btn.config(state="normal")
-    
-    # 刷新表格
-    for item in time_tree.get_children():
-        time_tree.delete(item)
-    for exam in data.get(current_date, []):
-        time_tree.insert("", END, values=(exam["subject"], exam["start_time"], exam["duration"]))
-
-
-def add_date():
-    """添加考试日期"""
-    top = Toplevel()
-    top.title("选择日期")
-    top.grid_columnconfigure(0, weight=1)
-    
-    Label(top, text="请选择考试日期：").grid(row=0, column=0, pady=10, padx=10, sticky="n")
-    cal = DateEntry(top, date_pattern="yyyy-mm-dd", width=12)
-    cal.grid(row=1, column=0, pady=10)
-    
-    def confirm():
-        date = cal.get()
-        if date not in data:
-            data[date] = []
-            refresh_date_list()
-            messagebox.showinfo("提示", f"已添加日期：{date}")
-        else:
-            messagebox.showwarning("提示", f"日期 {date} 已存在")
-        top.destroy()
-    
-    Button(top, text="确认", command=confirm).grid(row=2, column=0, pady=10)
-
-
-def add_time():
-    """添加单科考试时间"""
-    if not current_date:
-        return
-    
-    top = Toplevel(setofdayWindow)
-    top.title("添加考试时间")
-    top.geometry("300x300")
-    top.grid_columnconfigure(1, weight=1)
-    
-    # 科目输入
-    Label(top, text="考试科目：").grid(row=0, column=0, padx=10, pady=10, sticky="e")
-    subject_entry = Entry(top)
-    subject_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
-    subject_entry.insert(0, "数学")
-    
-    # 开始时间
-    Label(top, text="开始时间：").grid(row=1, column=0, padx=10, pady=10, sticky="e")
-    time_entry = Entry(top)
-    time_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
-    time_entry.insert(0, "09:00")
-    Label(top, text="(HH:MM)", font=("SimHei", 8)).grid(row=1, column=2, padx=5, sticky="w")
-    
-    # 时长
-    Label(top, text="时长(分钟)：").grid(row=2, column=0, padx=10, pady=10, sticky="e")
-    duration_entry = Entry(top)
-    duration_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
-    duration_entry.insert(0, "120")
-    
-    def confirm():
-        subject = subject_entry.get().strip()
-        start_time = time_entry.get().strip()
-        duration_str = duration_entry.get().strip()
-        
-        if not all([subject, start_time, duration_str]):
-            messagebox.showerror("错误", "请填写所有字段")
-            return
-        try:
-            datetime.strptime(start_time, TIME_FORMAT)
-            duration = int(duration_str)
-            if duration <= 0:
-                raise ValueError
-        except ValueError:
-            messagebox.showerror("错误", "时间格式错误或时长需为正整数")
-            return
-        
-        data[current_date].append({
-            "subject": subject,
-            "start_time": start_time,
-            "duration": duration
-        })
-        on_date_select(None)
-        messagebox.showinfo("提示", "添加成功")
-        top.destroy()
-    
-    Button(top, text="确认", command=confirm).grid(row=3, column=0, columnspan=2, pady=20)
-
-
-def save_data():
-    """保存数据到JSON"""
-    if not data:
-        messagebox.showwarning("提示", "暂无数据可保存")
-        return
-    
-    try:
-        with open(JSON_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        messagebox.showinfo("成功", f"已保存到 {JSON_PATH}")
-    except Exception as e:
-        messagebox.showerror("错误", f"保存失败：{str(e)}")
-
-data = load_data()
 def Settonsofday():
+    # 全局配置
+    JSON_PATH = "exam_schedule.json"
+    DATE_FORMAT = "%Y-%m-%d"
+    TIME_FORMAT = "%H:%M"
+
+    # 全局变量
+    data = {}  # 存储结构: {日期: [考试信息列表]}
+    current_date = None
+    date_listbox = None
+    time_tree = None
+    add_time_btn = None 
+    def load_data():
+        """加载已有数据"""
+        if os.path.exists(JSON_PATH):
+            try:
+                with open(JSON_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except:
+                return {}
+            return {}
+
+
+    def refresh_date_list():
+        """刷新日期列表"""
+        date_listbox.delete(0, END)
+        for date in sorted(data.keys()):
+            date_listbox.insert(END, date)
+
+
+    def on_date_select(event):
+        """处理日期选择事件"""
+        nonlocal current_date
+        selected = date_listbox.curselection()
+        if not selected:
+            current_date = None
+            add_time_btn.config(state="disabled")
+            return
+
+        current_date = date_listbox.get(selected[0])
+        add_time_btn.config(state="normal")
+    
+        # 刷新表格
+        for item in time_tree.get_children():
+            time_tree.delete(item)
+        for exam in data.get(current_date, []):
+            time_tree.insert("", END, values=(exam["subject"], exam["start_time"], exam["duration"]))
+
+
+    def add_date():
+        """添加考试日期"""
+        top = Toplevel(setofdayWindow)
+        top.title("选择日期")
+        top.grid_columnconfigure(0, weight=1)
+    
+        Label(top, text="请选择考试日期：").grid(row=0, column=0, pady=10, padx=10, sticky="n")
+        cal = DateEntry(top, date_pattern="yyyy-mm-dd", width=12)
+        cal.grid(row=1, column=0, pady=10)
+    
+        def confirm():
+            date = cal.get()
+            if date not in data:
+                data[date] = []
+                refresh_date_list()
+                messagebox.showinfo("提示", f"已添加日期：{date}")
+            else:
+                messagebox.showwarning("提示", f"日期 {date} 已存在")
+            top.destroy()
+    
+        Button(top, text="确认", command=confirm).grid(row=2, column=0, pady=10)
+
+
+    def add_time():
+        """添加单科考试时间"""
+        if not current_date:
+            return
+    
+        top = Toplevel(setofdayWindow)
+        top.title("添加考试时间")
+        top.geometry("300x300")
+        top.grid_columnconfigure(1, weight=1)
+    
+        # 科目输入
+        Label(top, text="考试科目：").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        subject_entry = Entry(top)
+        subject_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        subject_entry.insert(0, "数学")
+    
+        # 开始时间
+        Label(top, text="开始时间：").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        time_entry = Entry(top)
+        time_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+        time_entry.insert(0, "09:00")
+        Label(top, text="(HH:MM)", font=("SimHei", 8)).grid(row=1, column=2, padx=5, sticky="w")
+    
+        # 时长
+        Label(top, text="时长(分钟)：").grid(row=2, column=0, padx=10, pady=10, sticky="e")
+        duration_entry = Entry(top)
+        duration_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
+        duration_entry.insert(0, "120")
+    
+        def confirm():
+            subject = subject_entry.get().strip()
+            start_time = time_entry.get().strip()
+            duration_str = duration_entry.get().strip()
+        
+            if not all([subject, start_time, duration_str]):
+                messagebox.showerror("错误", "请填写所有字段")
+                return
+            try:
+                datetime.strptime(start_time, TIME_FORMAT)
+                duration = int(duration_str)
+                if duration <= 0:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("错误", "时间格式错误或时长需为正整数")
+                return
+        
+            data[current_date].append({
+                "subject": subject,
+                "start_time": start_time,
+                "duration": duration
+            })
+            on_date_select(None)
+            messagebox.showinfo("提示", "添加成功")
+            top.destroy()
+    
+        Button(top, text="确认", command=confirm).grid(row=3, column=0, columnspan=2, pady=20)
+
+
+    def save_data():
+        """保存数据到JSON"""
+        if not data:
+            messagebox.showwarning("提示", "暂无数据可保存")
+            return
+    
+        try:
+            with open(JSON_PATH, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            messagebox.showinfo("成功", f"已保存到 {JSON_PATH}")
+        except Exception as e:
+            messagebox.showerror("错误", f"保存失败：{str(e)}")
     setofdayWindow = Tk()
     setofdayWindow.title("考试时间录入")
     setofdayWindow.geometry("800x500")
@@ -318,8 +320,9 @@ def Settonsofday():
     Button(setofdayWindow, text="保存", command=save_data).grid(row=2, column=1, padx=10, pady=10, sticky="e")
 
     # 初始化
-    
+    data = load_data()
     refresh_date_list()
+    
 
     setofdayWindow.mainloop()
 
