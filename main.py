@@ -118,13 +118,21 @@ def Settonsofday():
     # 全局配置
     
     TIME_FORMAT = "%H:%M"
-
+    base_title = "考试时间录入" 
     # 全局变量
+    is_saved=True
     data = {}  # 存储结构: {日期: [考试信息列表]}
     current_date = None
     date_listbox = None
     time_tree = None
     add_time_btn = None 
+    def update_title():
+        if is_saved:
+            # 已保存：显示原标题
+            setofdayWindow.title(base_title)
+        else:
+            # 未保存：标题后加*
+            setofdayWindow.title(f"{base_title}-有未保存的考试！")
     def load_data():
         """加载已有数据"""
         if os.path.exists(JSON_PATH):
@@ -180,6 +188,9 @@ def Settonsofday():
             if date not in data:
                 data[date] = []
                 refresh_date_list()
+                nonlocal is_saved
+                is_saved = False
+                update_title()
             else:
                 messagebox.showwarning("提示", f"日期 {date} 已存在")
             top.destroy()
@@ -239,6 +250,9 @@ def Settonsofday():
                 "duration": duration
             })
             on_date_select(None)
+            nonlocal is_saved
+            is_saved = False
+            update_title()
             top.destroy()
     
         Button(top, text="确认", command=confirm).grid(row=3, column=0, columnspan=2, pady=20)
@@ -254,15 +268,29 @@ def Settonsofday():
             with open(JSON_PATH, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             messagebox.showinfo("考试文件已经被保存至程序所在目录", f"已保存到 {JSON_PATH}")
+            nonlocal is_saved
+            is_saved = True  # 标记已保存
+            update_title()  
         except Exception as e:
             messagebox.showerror("错误", f"保存失败：{str(e)}")
     setofdayWindow = Tk()
-    setofdayWindow.title("考试时间录入")
+    setofdayWindow.title(base_title)
+    update_title()
     setofdayWindow.geometry("800x500")
     setofdayWindow.grid_rowconfigure(1, weight=1)  # 内容区域自适应高度
+    def on_closing():
+        nonlocal is_saved
+        if not is_saved and data:  # 如果未保存且有数据
+            # 弹出提示，询问是否保存
+            result = messagebox.askyesnocancel("提示", "有未保存的考试信息，是否保存后再关闭？")
+            if result is None:  # 点击“取消”，不关闭窗口
+                return
+            elif result:  # 点击“是”，先保存再关闭
+                save_data()
+            # 点击“否”，直接关闭（不保存）
+                setofdayWindow.destroy()  # 关闭窗口
 
-
-
+    setofdayWindow.protocol("WM_DELETE_WINDOW", on_closing)
         # 左侧日期列表区域（占1列）
     setofdayWindow.grid_columnconfigure(0, minsize=200)  # 固定最小宽度
     Label(setofdayWindow, text="考试日期列表", font=("SimHei", 12)).grid(
