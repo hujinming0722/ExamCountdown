@@ -206,7 +206,7 @@ def Settonsofday():
     
         top = Toplevel(setofdayWindow)
         top.title("添加考试时间")
-        top.geometry("300x300")
+
         top.grid_columnconfigure(1, weight=1)
     
         # 科目输入
