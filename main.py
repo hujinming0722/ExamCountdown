@@ -3,6 +3,7 @@ import os
 from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel
 
 from datetime import datetime,date
+from turtle import width
 JSON_PATH = "exam_schedule.json"
 root=Tk()
 root.title("ExamCountdown")
@@ -25,7 +26,7 @@ EntryStartTime.grid(row=3,column=1)
 
 now = datetime.now().strftime("%H:%M")#时间转换成字符串放到开始时间的默认值
 EntryStartTime.insert(0, now)
-ButtonOfExit=Button(text="退出",command=root.destroy)
+ButtonOfExit=Button(text="退出",command=root.destroy,width=15)
 ButtonOfExit.grid(row=4,column=0,sticky=E)
 
 
@@ -243,17 +244,30 @@ def Settonsofday():
             except ValueError:
                 messagebox.showerror("错误", "时间格式错误或时长需为正整数")
                 return
-        
-            data[current_date].append({
-                "subject": subject,
-                "start_time": start_time,
-                "duration": duration
-            })
-            on_date_select(None)
-            nonlocal is_saved
-            is_saved = False
-            update_title()
+            current_exams = data[current_date]  # 获取当前日期的所有考试
+            has_conflict = False  # 标记是否有冲突
+    
+            for exam in current_exams:
+                if exam["start_time"] == start_time:
+                    messagebox.showwarning("提示", f"时间设置冲突！{start_time} 的考试时段已经被分配给其他科目")
+                    has_conflict = True  # 标记有冲突
+                    break  # 找到冲突就退出循环
+    
+                        # 2. 只有无冲突时，才添加新考试
+            if not has_conflict:
+                data[current_date].append({
+                    "subject": subject,
+                    "start_time": start_time,
+                    "duration": duration
+                })
+                on_date_select(None)  # 刷新表格显示
+                nonlocal is_saved
+                is_saved = False  # 标记未保存
+                update_title()  # 更新标题提示
+                top.destroy()  # 关闭窗口
+
             top.destroy()
+            
     
         Button(top, text="确认", command=confirm).grid(row=3, column=0, columnspan=2, pady=20)
 
@@ -353,19 +367,19 @@ def Settonsofday():
 
 
 
-ButtonOfStart=Button(text="开始考试",command=ExamStart)
+ButtonOfStart=Button(text="开始考试",command=ExamStart,width=20)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
 ButtonOfMakelist=Button(text="设定多日或多次考试",command=Settonsofday)
 ButtonOfReadlist=Button(text="读取多日或多次考试并开始")
-ButtonOfMakelist.grid(row=4,column=2,sticky=E)
-ButtonOfReadlist.grid(row=4,column=3,sticky=E)
+ButtonOfMakelist.grid(row=5,column=0,sticky=E)
+ButtonOfReadlist.grid(row=5,column=1,sticky=E)
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 window_width = root.winfo_reqwidth()
 window_height = root.winfo_reqheight()
-windowX = int((screen_width - window_width) / 2)
-windowY = int((screen_height - window_height) / 2)
+windowX = int(((screen_width - window_width) / 2)-200)
+windowY = int(((screen_height - window_height) / 2)+80)
 root.geometry(f"+{windowX}+{windowY}")
 
 root.mainloop()
