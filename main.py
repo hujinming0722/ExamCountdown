@@ -289,6 +289,8 @@ def Settonsofday():
                 save_data()
             # 点击“否”，直接关闭（不保存）
                 setofdayWindow.destroy()  # 关闭窗口
+        else:
+            setofdayWindow.destroy()
 
     setofdayWindow.protocol("WM_DELETE_WINDOW", on_closing)
         # 左侧日期列表区域（占1列）
