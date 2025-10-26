@@ -246,7 +246,7 @@ def Settonsofday():
         time_entry = Entry(top)
         time_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
         time_entry.insert(0, "09:00")
-        Label(top, text="(HH:MM)", font=("SimHei", 8)).grid(row=1, column=2, padx=5, sticky="w")
+        Label(top, text="(HH:MM)", font=("TkDefaultFont", 8)).grid(row=1, column=2, padx=5, sticky="w")
     
         # 时长
         Label(top, text="时长(分钟)：").grid(row=2, column=0, padx=10, pady=10, sticky="e")
@@ -335,7 +335,7 @@ def Settonsofday():
     setofdayWindow.protocol("WM_DELETE_WINDOW", on_closing)
         # 左侧日期列表区域（占1列）
     setofdayWindow.grid_columnconfigure(0, minsize=200)  # 固定最小宽度
-    Label(setofdayWindow, text="考试日期列表", font=("SimHei", 12)).grid(
+    Label(setofdayWindow, text="考试日期列表", font=("TkDefaultFont", 12)).grid(
     row=0, column=0,sticky="nw")
     def delete_date():
         """删除选中的考试日期及该日期下的所有考试"""
@@ -389,9 +389,9 @@ def Settonsofday():
     Button(setofdayWindow, text="+ 添加日期", command=add_date).grid(
         row=2, column=0, padx=10, pady=10, sticky="ew")
 
-    # 右侧单    科时间区域（占1列）
+    # 右侧单科时间区域（占1列）
     setofdayWindow.grid_columnconfigure(1, weight=1)  # 自适应宽度
-    Label(setofdayWindow, text="单科考试时间", font=("SimHei", 12)).grid(
+    Label(setofdayWindow, text="单科考试时间", font=("TkDefaultFont", 12)).grid(
         row=0, column=1,sticky="nw")
 
     # 单科时间表格
@@ -449,8 +449,8 @@ def stratToomanyDays():
     if not exam_data:
         messagebox.showinfo("提示", "考试日程为空")
         return
-
-    display_window = Toplevel(root)
+    root.destroy()
+    display_window = Tk()
     display_window.title("多日考试倒计时")
     display_window.grid_rowconfigure(1, weight=1)
     display_window.grid_columnconfigure(0, weight=1)
@@ -463,9 +463,12 @@ def stratToomanyDays():
 
     columns = ("日期", "科目", "开始时间", "时长(分钟)")
     tree = ttk.Treeview(display_window, columns=columns, show="headings")
-    for col in columns:
+    for i, col in enumerate(columns):
         tree.heading(col, text=col)
-        tree.column(col, width=150,anchor="center")
+        if i == 0:  # 第一列
+            tree.column(col, width=180, anchor="center") 
+        else:  # 其他列
+            tree.column(col, width=150, anchor="center")
     tree.grid(row=3, column=0, padx=10, pady=10)
 
     all_exams = []
@@ -560,6 +563,13 @@ def stratToomanyDays():
             display_window.after(3000, update_countdown)
 
     update_countdown()
+    screen_width = display_window.winfo_screenwidth()
+    screen_height = display_window.winfo_screenheight()
+    window_width = display_window.winfo_reqwidth()
+    window_height = display_window.winfo_reqheight()
+    windowX = int(((screen_width - window_width) / 2)-250)
+    windowY = int(((screen_height - window_height) / 2)-350)
+    display_window.geometry(f"+{windowX}+{windowY}")
     display_window.mainloop()
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart,width=20)
