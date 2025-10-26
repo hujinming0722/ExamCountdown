@@ -434,7 +434,13 @@ def Settonsofday():
 
     setofdayWindow.mainloop()
 
-
+def startToomanyDays():
+    current_exams = data[current_date]
+            for i, exam in enumerate(current_exams):
+                if exam["subject"] == exam_subject and exam["start_time"] == exam_time:
+                    del current_exams[i]
+                    break
+    pass
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart,width=20)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
