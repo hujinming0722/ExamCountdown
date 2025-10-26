@@ -2,8 +2,7 @@ import json
 import os
 from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel,Menu
 
-from datetime import datetime,date
-from turtle import width
+from datetime import datetime,date,timedelta
 JSON_PATH = "exam_schedule.json"
 root=Tk()
 root.title("ExamCountdown")
@@ -40,6 +39,7 @@ def ExamStart():
     subject_text = f"本场考试的科目是{subject_input}" if subject_input else "未输入考试科目"
     print(subject_input)
     
+    #我现在看我写的这玩意我都匪夷所思，到点了就开始倒计时呗，非得再拿开始时间到结束时间再算一遍
     
     startTimeALL=datetime.strptime(start_time_input,"%H:%M")#获取输入并转换为'datetime.datetime
     time_interval1 = timedelta(minutes=int(minutes_input))#将用户输入考试时长的数字转换为时间
@@ -434,18 +434,138 @@ def Settonsofday():
 
     setofdayWindow.mainloop()
 
-def startToomanyDays():
-    current_exams = data[current_date]
-            for i, exam in enumerate(current_exams):
-                if exam["subject"] == exam_subject and exam["start_time"] == exam_time:
-                    del current_exams[i]
+def stratToomanyDays():  
+    if not os.path.exists(JSON_PATH):
+        messagebox.showerror("错误", f"未找到考试日程文件 {JSON_PATH}")
+        return
+
+    try:
+        with open(JSON_PATH, "r", encoding="utf-8") as f:
+            exam_data = json.load(f)
+    except Exception as e:
+        messagebox.showerror("错误", f"读取文件失败: {str(e)}")
+        return
+
+    if not exam_data:
+        messagebox.showinfo("提示", "考试日程为空")
+        return
+
+    display_window = Toplevel(root)
+    display_window.title("多日考试倒计时")
+    display_window.grid_rowconfigure(1, weight=1)
+    display_window.grid_columnconfigure(0, weight=1)
+
+    Label(display_window, text="所有考试日程", font=("TkDefaultFont", 25)).grid(row=2, column=0, pady=10, sticky="nsew")
+    # 添加样式设置
+    style = ttk.Style()
+    style.configure("Treeview", font=("TkDefaultFont", 20,"bold"), rowheight=30)
+    style.configure("Treeview.Heading", font=("TkDefaultFont", 21,"bold"))
+
+    columns = ("日期", "科目", "开始时间", "时长(分钟)")
+    tree = ttk.Treeview(display_window, columns=columns, show="headings")
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=150,anchor="center")
+    tree.grid(row=3, column=0, padx=10, pady=10)
+
+    all_exams = []
+    for exam_date, exams in exam_data.items():
+        for exam in exams:
+            all_exams.append({
+                "date": exam_date,
+                "subject": exam["subject"],
+                "start_time": exam["start_time"],
+                "duration": exam["duration"]
+            })
+            tree.insert("", END, values=(
+                exam_date,
+                exam["subject"],
+                exam["start_time"],
+                exam["duration"]
+            ))
+
+    countdown_label = Label(display_window, text="", font=("TkDefaultFont",64))
+    countdown_label.grid(row=0, column=0, pady=10, sticky="nsew")
+    status_label = Label(display_window, text="", font=("TkDefaultFont",32))
+    status_label.grid(row=1, column=0, pady=10, sticky="nsew")
+    current_exam_index = -1
+    today_str = str(date.today())
+    today_exams = []
+
+    if today_str in exam_data:
+        for exam in exam_data[today_str]:
+            try:
+                start_dt = datetime.strptime(f"{today_str} {exam['start_time']}", "%Y-%m-%d %H:%M")
+                today_exams.append({
+                    "start_dt": start_dt,
+                    "subject": exam["subject"],
+                    "duration": exam["duration"],
+                    "start_time": exam["start_time"]
+                })
+            except:
+                continue
+
+        today_exams.sort(key=lambda x: x["start_dt"])
+
+        now = datetime.now()
+        for i, exam in enumerate(today_exams):
+            if exam["start_dt"] > now:
+                current_exam_index = i
+                break
+
+        if current_exam_index == -1:
+            for i, exam in enumerate(today_exams):
+                end_dt = exam["start_dt"] + timedelta(minutes=exam["duration"])
+                if now < end_dt:
+                    current_exam_index = i
                     break
-    pass
+
+    def update_countdown():
+        nonlocal current_exam_index
+        now = datetime.now()
+        
+        if not today_exams:
+            status_label.config(text=f"今天({today_str})没有考试")
+            countdown_label.config(text="")
+            display_window.after(1000, update_countdown)
+            return
+
+        if current_exam_index < 0 or current_exam_index >= len(today_exams):
+            status_label.config(text=f"今天({today_str})所有考试已结束")
+            countdown_label.config(text="")
+            display_window.after(5000, display_window.destroy)
+            return
+
+        current_exam = today_exams[current_exam_index]
+        start_dt = current_exam["start_dt"]
+        end_dt = start_dt + timedelta(minutes=current_exam["duration"])
+        
+        status_label.config(text=f"当前考试: {current_exam['subject']} ({today_str} {current_exam['start_time']})")
+
+        if now < start_dt:
+            remaining = start_dt - now
+            hours, remainder = divmod(remaining.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            countdown_label.config(text=f"距离考试开始还有: {hours}时{minutes}分{seconds}秒")
+            display_window.after(1000, update_countdown)
+        elif now < end_dt:
+            remaining = end_dt - now
+            hours, remainder = divmod(remaining.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            countdown_label.config(text=f"考试进行中\n剩余: {hours}时{minutes}分{seconds}秒")
+            display_window.after(1000, update_countdown)
+        else:
+            countdown_label.config(text="本场考试已结束")
+            current_exam_index += 1
+            display_window.after(3000, update_countdown)
+
+    update_countdown()
+    display_window.mainloop()
 
 ButtonOfStart=Button(text="开始考试",command=ExamStart,width=20)
 ButtonOfStart.grid(row=4,column=1,sticky=E)
 ButtonOfMakelist=Button(text="设定多日或多次考试",command=Settonsofday)
-ButtonOfReadlist=Button(text="读取多日或多次考试并开始")
+ButtonOfReadlist=Button(text="读取多日或多次考试并开始",command=stratToomanyDays)
 ButtonOfMakelist.grid(row=5,column=0,sticky=E)
 ButtonOfReadlist.grid(row=5,column=1,sticky=E)
 
