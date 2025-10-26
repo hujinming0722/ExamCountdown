@@ -1,6 +1,6 @@
 import json
 import os
-from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel
+from tkinter import Tk, LabelFrame, Button, Label, Entry, Listbox, Scrollbar,messagebox, END, SINGLE,N,E,W,ttk,Toplevel,Menu
 
 from datetime import datetime,date
 from turtle import width
@@ -144,6 +144,32 @@ def Settonsofday():
                 return {}
         return {}
 
+    def delete_exam():
+        """删除表格中选中的单个考试"""
+        selected_item = time_tree.selection()  # 获取表格中选中的项
+        if not selected_item or not current_date:
+            messagebox.showinfo("提示", "请先选中要删除的考试")
+            return
+        
+        # 获取选中考试的信息（科目、时间等）
+        item_values = time_tree.item(selected_item[0], "values")
+        exam_subject = item_values[0]
+        exam_time = item_values[1]
+        
+        # 二次确认
+        if messagebox.askyesno("确认删除", f"确定要删除 {exam_subject}（{exam_time}）吗？"):
+            # 从data中找到并删除该考试
+            current_exams = data[current_date]
+            for i, exam in enumerate(current_exams):
+                if exam["subject"] == exam_subject and exam["start_time"] == exam_time:
+                    del current_exams[i]
+                    break
+            # 刷新表格显示
+            on_date_select(None)
+            # 标记未保存
+            nonlocal is_saved
+            is_saved = False
+            update_title()
 
     def refresh_date_list():
         """刷新日期列表"""
@@ -311,7 +337,30 @@ def Settonsofday():
     setofdayWindow.grid_columnconfigure(0, minsize=200)  # 固定最小宽度
     Label(setofdayWindow, text="考试日期列表", font=("SimHei", 12)).grid(
     row=0, column=0,sticky="nw")
-
+    def delete_date():
+        """删除选中的考试日期及该日期下的所有考试"""
+        selected = date_listbox.curselection()
+        if not selected:
+            messagebox.showinfo("提示", "请先选中要删除的日期")
+            return
+        
+        # 获取选中的日期
+        selected_date = date_listbox.get(selected[0])
+        
+        # 二次确认
+        if messagebox.askyesno("确认删除", f"确定要删除 {selected_date} 及该日期下的所有考试吗？"):
+            # 从data中删除该日期
+            if selected_date in data:
+                del data[selected_date]
+                # 刷新日期列表和右侧表格
+                refresh_date_list()
+                # 清空右侧表格（因为删除了日期，没有选中项了）
+                for item in time_tree.get_children():
+                    time_tree.delete(item)
+                # 标记未保存
+                nonlocal is_saved
+                is_saved = False
+                update_title()
 # 日期列表（带滚动条）
     date_frame = LabelFrame(setofdayWindow)
     date_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
@@ -325,6 +374,16 @@ def Settonsofday():
     date_listbox.grid(row=0, column=0, sticky="nsew")
     date_scroll.config(command=date_listbox.yview)
     date_listbox.bind('<<ListboxSelect>>', on_date_select)
+    date_menu = Menu(date_listbox, tearoff=0)
+    date_menu.add_command(label="删除日期", command=delete_date)
+
+    # 绑定右键点击事件（显示菜单）
+    def show_date_menu(event):
+        # 确保右键点击在列表项上才显示菜单
+        if date_listbox.curselection():
+            date_menu.post(event.x_root, event.y_root)
+
+    date_listbox.bind("<Button-3>", show_date_menu)  # <Button-3>是右键点击
 
     # 添加日期按钮
     Button(setofdayWindow, text="+ 添加日期", command=add_date).grid(
@@ -350,6 +409,16 @@ def Settonsofday():
         time_tree.heading(col, text=col)
         time_tree.column(col, width=150)
     time_tree.grid(row=0, column=0, sticky="nsew")
+    
+    # 绑定右键点击事件（显示菜单）
+    def show_exam_menu(event):
+        # 确保右键点击在表格项上才显示菜单
+        if time_tree.selection():
+            exam_menu.post(event.x_root, event.y_root)
+    exam_menu = Menu(time_tree, tearoff=0)
+    exam_menu.add_command(label="删除考试", command=delete_exam)
+    time_tree.bind("<Button-3>", show_exam_menu)  # <Button-3>是右键点击
+            
 
     # 添加单科时间按钮
     add_time_btn = Button(setofdayWindow, text="+ 添加单科时间", command=add_time, state="disabled")
