@@ -275,7 +275,7 @@ def Settonsofday():
     
             for exam in current_exams:
                 if exam["start_time"] == start_time:
-                    messagebox.showwarning("提示", f"时间设置冲突！{start_time} 的考试时段已经被分配给其他科目")
+                    messagebox.showwarning(parent=setofdayWindow,title="提示", message =f"时间设置冲突！{start_time} 的考试时段已经被分配给其他科目")
                     has_conflict = True  # 标记有冲突
                     break  # 找到冲突就退出循环
     
@@ -301,13 +301,13 @@ def Settonsofday():
     def save_data():
         """保存数据到JSON"""
         if not data:
-            messagebox.showwarning("提示", "暂无数据可保存")
+            messagebox.showwarning(parent=setofdayWindow,title="提示", message = "暂无数据可保存")
             return
     
         try:
             with open(JSON_PATH, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            messagebox.showinfo("考试文件已经被保存至程序所在目录", f"已保存到 {JSON_PATH}")
+            messagebox.showinfo(parent=setofdayWindow,title="考试文件已经被保存至程序所在目录",message = f"已保存到 {JSON_PATH}")
             nonlocal is_saved
             is_saved = True  # 标记已保存
             update_title()  
@@ -316,13 +316,12 @@ def Settonsofday():
     setofdayWindow = Tk()
     setofdayWindow.title(base_title)
     update_title()
-    setofdayWindow.geometry("800x500")
     setofdayWindow.grid_rowconfigure(1, weight=1)  # 内容区域自适应高度
     def on_closing():
         nonlocal is_saved
         if not is_saved and data:  # 如果未保存且有数据
             # 弹出提示，询问是否保存
-            result = messagebox.askyesnocancel("提示", "有未保存的考试信息，是否保存后再关闭？")
+            result = messagebox.askyesnocancel(parent=setofdayWindow,title="提示", message="有未保存的考试信息，是否保存后再关闭？")
             if result is None:  # 点击“取消”，不关闭窗口
                 return
             elif result:  # 点击“是”，先保存再关闭
@@ -341,14 +340,14 @@ def Settonsofday():
         """删除选中的考试日期及该日期下的所有考试"""
         selected = date_listbox.curselection()
         if not selected:
-            messagebox.showinfo("提示", "请先选中要删除的日期")
+            messagebox.showinfo(parent=setofdayWindow,title="提示",message= "请先选中要删除的日期")
             return
         
         # 获取选中的日期
         selected_date = date_listbox.get(selected[0])
         
         # 二次确认
-        if messagebox.askyesno("确认删除", f"确定要删除 {selected_date} 及该日期下的所有考试吗？"):
+        if messagebox.askyesno(parent=setofdayWindow,title="确认删除",message= f"确定要删除 {selected_date} 及该日期下的所有考试吗？"):
             # 从data中删除该日期
             if selected_date in data:
                 del data[selected_date]
@@ -376,7 +375,10 @@ def Settonsofday():
     date_listbox.bind('<<ListboxSelect>>', on_date_select)
     date_menu = Menu(date_listbox, tearoff=0)
     date_menu.add_command(label="删除日期", command=delete_date)
-
+    
+    
+    
+        
     # 绑定右键点击事件（显示菜单）
     def show_date_menu(event):
         # 确保右键点击在列表项上才显示菜单
@@ -410,6 +412,92 @@ def Settonsofday():
         time_tree.column(col, width=150)
     time_tree.grid(row=0, column=0, sticky="nsew")
     
+    def modify_exam():
+        """修改选中的考试信息"""
+        selected_item = time_tree.selection()  # 获取表格中选中的项
+        if not selected_item or not current_date:
+            messagebox.showinfo(parent=setofdayWindow,title="提示",message= "请先选中要修改的考试")
+            return
+    
+        # 获取选中考试的当前信息
+        item_values = time_tree.item(selected_item[0], "values")
+        old_subject = item_values[0]  # 原科目
+        old_start_time = item_values[1]  # 原开始时间
+        old_duration = item_values[2]  # 原时长（字符串类型）
+
+        # 弹出修改窗口（复用添加考试的弹窗样式）
+        top = Toplevel(setofdayWindow)
+        top.title("修改考试信息")
+        top.grid_columnconfigure(1, weight=1)
+    
+        # 科目输入框（预设原科目）
+        Label(top, text="考试科目：").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        subject_entry = Entry(top)
+        subject_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        subject_entry.insert(0, old_subject)  # 填充原有科目
+    
+        # 开始时间输入框（预设原时间）
+        Label(top, text="开始时间：").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        time_entry = Entry(top)
+        time_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+        time_entry.insert(0, old_start_time)  # 填充原有时间
+        Label(top, text="(HH:MM)", font=("TkDefaultFont", 8)).grid(row=1, column=2, padx=5, sticky="w")
+    
+        # 时长输入框（预设原时长）
+        Label(top, text="时长(分钟)：").grid(row=2, column=0, padx=10, pady=10, sticky="e")
+        duration_entry = Entry(top)
+        duration_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
+        duration_entry.insert(0, old_duration)  # 填充原有时长
+        def confirm_modify():
+            """确认修改并更新数据"""
+            new_subject = subject_entry.get().strip()
+            new_start_time = time_entry.get().strip()
+            new_duration_str = duration_entry.get().strip()
+        
+            # 基础验证（同添加考试）
+            if not all([new_subject, new_start_time, new_duration_str]):
+                messagebox.showerror(parent=setofdayWindow,title="错误", message="请填写所有字段")
+                return
+            try:
+                datetime.strptime(new_start_time, TIME_FORMAT)  # 验证时间格式
+                new_duration = int(new_duration_str)
+                if new_duration <= 0:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror(parent=setofdayWindow,title="错误",message= "时间格式错误或时长需为正整数")
+                return
+        
+            # 检查时间冲突（排除自身原时间的情况）
+            current_exams = data[current_date]
+            has_conflict = False
+            for exam in current_exams:
+                # 若修改后的时间与其他考试冲突（且不是原考试的时间）
+                if (exam["start_time"] == new_start_time and 
+                    not (exam["subject"] == old_subject and exam["start_time"] == old_start_time)):
+                    messagebox.showwarning(parent=setofdayWindow,title="提示",message= f"时间冲突！{new_start_time} 已被其他科目占用")
+                    has_conflict = True
+                    break
+            if has_conflict:
+                return
+        
+            # 更新数据（替换原考试信息）
+            for i, exam in enumerate(current_exams):
+                if exam["subject"] == old_subject and exam["start_time"] == old_start_time:
+                    current_exams[i] = {
+                        "subject": new_subject,
+                        "start_time": new_start_time,
+                        "duration": new_duration
+                    }
+                    break
+        
+            # 刷新表格显示并标记未保存
+            on_date_select(None)  # 重新加载当前日期的考试列表
+            nonlocal is_saved
+            is_saved = False
+            update_title()
+            top.destroy()
+        Button(top, text="确认修改", command=confirm_modify).grid(row=3, column=0, columnspan=2, pady=20)
+    
     # 绑定右键点击事件（显示菜单）
     def show_exam_menu(event):
         # 确保右键点击在表格项上才显示菜单
@@ -417,6 +505,7 @@ def Settonsofday():
             exam_menu.post(event.x_root, event.y_root)
     exam_menu = Menu(time_tree, tearoff=0)
     exam_menu.add_command(label="删除考试", command=delete_exam)
+    exam_menu.add_command(label="修改考试", command=modify_exam)
     time_tree.bind("<Button-3>", show_exam_menu)  # <Button-3>是右键点击
             
 
