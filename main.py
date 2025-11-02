@@ -360,6 +360,48 @@ def Settonsofday():
                 nonlocal is_saved
                 is_saved = False
                 update_title()
+    def change_date():
+        """修改选中的考试日期及该日期下的所有考试"""
+        selected = date_listbox.curselection()
+        if not selected:
+            messagebox.showinfo(parent=setofdayWindow,title="提示",message= "请先选中要修改的日期")
+            return
+        
+        # 获取选中的日期
+        selected_date = date_listbox.get(selected[0])
+            # 从data中修改该日期
+        if selected_date in data:
+            top = Toplevel(setofdayWindow)
+            top.title("修改考试日期")
+            top.grid_columnconfigure(0, weight=1)
+    
+            Label(top, text="请修改考试日期：").grid(row=0, column=0, pady=10, padx=10, sticky="n")
+
+            cal = Entry(top, width=12)
+            cal.insert(0,selected_date)
+            cal.grid(row=1, column=0, pady=10)
+    
+            def confirm():
+                date = cal.get()
+                if date in data:
+                    messagebox.showwarning("提示", f"日期 {date} 已经存在")                
+                else:
+                    data[date] = data[selected_date]
+                    del data[selected_date]
+                    refresh_date_list()
+                    nonlocal is_saved
+                    is_saved = False
+                    update_title()
+                    top.destroy()
+                    
+            Button(top, text="确认", command=confirm).grid(row=2, column=0, pady=10)
+            
+            # 刷新日期列表和右侧表格
+            refresh_date_list()
+            # 标记未保存
+            nonlocal is_saved
+            is_saved = False
+            update_title()
 # 日期列表（带滚动条）
     date_frame = LabelFrame(setofdayWindow)
     date_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
@@ -375,7 +417,8 @@ def Settonsofday():
     date_listbox.bind('<<ListboxSelect>>', on_date_select)
     date_menu = Menu(date_listbox, tearoff=0)
     date_menu.add_command(label="删除日期", command=delete_date)
-    
+    date_menu.add_command(label="修改日期", command=change_date)
+ 
     
     
         
