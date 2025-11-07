@@ -1,40 +1,32 @@
-name: Auto-increment version and release
+name: Auto-increment version and release (Win7 compatible)
 
-# 触发条件：推送到 main 分支（排除标签推送，避免循环触发）
 on:
   push:
     branches: [ "main" ]
-    tags-ignore: [ 'v*' ]  # 忽略标签推送，防止重复执行
+    tags-ignore: [ 'v*' ]
 
 jobs:
   get-next-version:
     runs-on: ubuntu-latest
     outputs:
-      next_version: ${{ steps.calc-version.outputs.next_version }}  # 输出下一个版本号
+      next_version: ${{ steps.calc-version.outputs.next_version }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 拉取所有历史，以便获取所有标签
+          fetch-depth: 0
 
       - name: Calculate next version
         id: calc-version
         run: |
-          # 获取所有符合 v*.*.* 格式的标签，按版本号排序
           latest_tag=$(git tag --list "v*.*.*" --sort=-v:refname | head -n 1)
-          
-          # 如果没有历史标签，初始版本为 v1.0.0
           if [ -z "$latest_tag" ]; then
             next_version="v0.0.1"
           else
-            # 移除前缀 'v'，拆分版本号为 major.minor.patch
-            version=${latest_tag:1}  # 如 v1.1.2 → 1.1.2
+            version=${latest_tag:1}
             IFS='.' read -r major minor patch <<< "$version"
-            
-            # 递增 patch 版本（小版本+1）
             patch=$((patch + 1))
             next_version="v$major.$minor.$patch"
           fi
-          
           echo "next_version=$next_version" >> $GITHUB_OUTPUT
           echo "将创建新版本: $next_version"
 
@@ -45,29 +37,47 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.11"]
+        python-version: ["3.8"]  # 关键：使用 Python 3.8（Win7 最后支持的版本）
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.8
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          # 可选：指定缓存依赖路径（加速构建）
+          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install compatible PyInstaller (Win7 support)
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
+          # PyInstaller 5.13 是最后支持 Python 3.8 且兼容 Win7 的版本之一
+          pip install pyinstaller==5.13
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        shell: ${{ matrix.os == 'windows-latest' ? 'pwsh' : 'bash' }}
+        shell: ${{ contains(matrix.os, 'windows') && 'pwsh' || 'bash' }}
 
-      - name: Package with pyinstaller
+      - name: Set OS name env
         run: |
-          # 按系统和版本号命名（如 myapp-v1.0.0-linux）
-          os_name=${{ matrix.os == 'windows-latest' ? 'windows' : 'linux' }}
-          pyinstaller --onefile --name "myapp-${{ needs.get-next-version.outputs.next_version }}-$os_name" main.py
-        shell: ${{ matrix.os == 'windows-latest' ? 'pwsh' : 'bash' }}
+          if [[ "${{ matrix.os }}" == *"windows"* ]]; then
+            echo "OS_NAME=windows" >> $GITHUB_ENV
+          else
+            echo "OS_NAME=linux" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Package with pyinstaller (Win7 compatible)
+        run: |
+          # 针对 Windows 7 额外添加兼容性参数
+          if [ "$env:OS_NAME" = "windows" ]; then
+            pyinstaller --onefile --name "myapp-${{ needs.get-next-version.outputs.next_version }}-$env:OS_NAME" \
+              --win-private-assemblies \  # 打包私有依赖，避免系统依赖冲突
+              main.py
+          else
+            pyinstaller --onefile --name "myapp-${{ needs.get-next-version.outputs.next_version }}-$env:OS_NAME" \
+              main.py
+          fi
+        shell: ${{ contains(matrix.os, 'windows') && 'pwsh' || 'bash' }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -93,18 +103,18 @@ jobs:
           git tag ${{ needs.get-next-version.outputs.next_version }}
           git push origin ${{ needs.get-next-version.outputs.next_version }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 用于推送标签
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.get-next-version.outputs.next_version }}
-          name: Release ${{ needs.get-next-version.outputs.next_version }}
+          name: Release ${{ needs.get-next-version.outputs.next_version }} (Win7 兼容)
           body: |
             自动发布版本 ${{ needs.get-next-version.outputs.next_version }}
-            包含 Linux 和 Windows 可执行文件
+            支持 Windows 7（基于 Python 3.8）和 Linux 系统
           files: |
-            ExamCountdown-${{ needs.get-next-version.outputs.next_version }}-ubuntu-latest/*
-            ExamCountdown-${{ needs.get-next-version.outputs.next_version }}-windows-latest/*
+            myapp-${{ needs.get-next-version.outputs.next_version }}-ubuntu-latest/*
+            myapp-${{ needs.get-next-version.outputs.next_version }}-windows-latest/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
