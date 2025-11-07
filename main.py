@@ -593,7 +593,7 @@ def stratToomanyDays():
     style.configure("Treeview", font=("TkDefaultFont", 20,"bold"), rowheight=30)
     style.configure("Treeview.Heading", font=("TkDefaultFont", 21,"bold"))
 
-    columns = ("日期", "科目", "开始时间", "时长(分钟)")
+    columns = ("日期", "科目", "开始时间", "结束时间", "时长(分钟)")
     tree = ttk.Treeview(display_window, columns=columns, show="headings")
     for i, col in enumerate(columns):
         tree.heading(col, text=col)
@@ -606,19 +606,34 @@ def stratToomanyDays():
     all_exams = []
     for exam_date, exams in exam_data.items():
         for exam in exams:
+            # 计算结束时间
+            start_time = exam["start_time"]  # 格式："HH:MM"
+            duration = exam["duration"]      # 单位：分钟
+        
+            # 组合日期和开始时间为datetime对象
+            start_dt = datetime.strptime(f"{exam_date} {start_time}", "%Y-%m-%d %H:%M")
+            # 计算结束datetime
+            end_dt = start_dt + timedelta(minutes=duration)
+            # 提取结束时间字符串（仅保留HH:MM）
+            end_time = end_dt.strftime("%H:%M")
+
+            # 构建包含结束时间的考试信息
             all_exams.append({
                 "date": exam_date,
                 "subject": exam["subject"],
-                "start_time": exam["start_time"],
-                "duration": exam["duration"]
+                "start_time": start_time,
+                "end_time": end_time,  # 新增结束时间
+                "duration": duration
             })
+            # 插入表格时包含结束时间
             tree.insert("", END, values=(
                 exam_date,
                 exam["subject"],
-                exam["start_time"],
-                exam["duration"]
+                start_time,
+                end_time,  # 新增结束时间列数据
+                duration
             ))
-
+    
     countdown_label = Label(display_window, text="", font=("TkDefaultFont",64))
     countdown_label.grid(row=0, column=0, pady=10, sticky="nsew")
     status_label = Label(display_window, text="", font=("TkDefaultFont",32))
@@ -675,20 +690,22 @@ def stratToomanyDays():
         start_dt = current_exam["start_dt"]
         end_dt = start_dt + timedelta(minutes=current_exam["duration"])
         
-        status_label.config(text=f"当前考试: {current_exam['subject']} ({today_str} {current_exam['start_time']})")
-
+        
         if now < start_dt:
             remaining = start_dt - now
             hours, remainder = divmod(remaining.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             countdown_label.config(text=f"距离考试开始还有: {hours}时{minutes}分{seconds}秒")
             display_window.after(1000, update_countdown)
+            status_label.config(text=f"即将开始的考试: {current_exam['subject']} ({today_str} {current_exam['start_time']})")
+
         elif now < end_dt:
             remaining = end_dt - now
             hours, remainder = divmod(remaining.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             countdown_label.config(text=f"考试进行中\n剩余: {hours}时{minutes}分{seconds}秒")
             display_window.after(1000, update_countdown)
+            status_label.config(text=f"当前考试: {current_exam['subject']} ({today_str} {current_exam['start_time']})")
         else:
             countdown_label.config(text="本场考试已结束")
             current_exam_index += 1
