@@ -30,71 +30,48 @@ jobs:
           echo "next_version=$next_version" >> $GITHUB_OUTPUT
           echo "将创建新版本: $next_version"
 
-  build-and-release:
+  build-windows:
     needs: get-next-version
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.8"]  # 关键：使用 Python 3.8（Win7 最后支持的版本）
-
+    runs-on: windows-latest  # 直接指定 Windows 环境，不使用 matrix
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.8 (Win7 兼容)
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          # 可选：指定缓存依赖路径（加速构建）
-          cache: 'pip'
+          python-version: "3.8"  # 直接指定 Python 版本
 
-      - name: Install compatible PyInstaller (Win7 support)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # PyInstaller 5.13 是最后支持 Python 3.8 且兼容 Win7 的版本之一
-          pip install pyinstaller==5.13
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        shell: ${{ contains(matrix.os, 'windows') && 'pwsh' || 'bash' }}
+          pip install pyinstaller==5.13  # 兼容 Win7 的版本
+          if (Test-Path "requirements.txt") { pip install -r requirements.txt }
+        shell: pwsh  # 直接使用 PowerShell（Windows 环境）
 
-      - name: Set OS name env
+      - name: Package with pyinstaller (Win7 兼容)
         run: |
-          if [[ "${{ matrix.os }}" == *"windows"* ]]; then
-            echo "OS_NAME=windows" >> $GITHUB_ENV
-          else
-            echo "OS_NAME=linux" >> $GITHUB_ENV
-          fi
-        shell: bash
+          $nextVersion = "${{ needs.get-next-version.outputs.next_version }}"
+          pyinstaller --onefile --name "myapp-$nextVersion-windows" --win-private-assemblies main.py
+        shell: pwsh
 
-      - name: Package with pyinstaller (Win7 compatible)
-        run: |
-          # 针对 Windows 7 额外添加兼容性参数
-          if [ "$env:OS_NAME" = "windows" ]; then
-            pyinstaller --onefile --name "myapp-${{ needs.get-next-version.outputs.next_version }}-$env:OS_NAME" \
-              --win-private-assemblies \  # 打包私有依赖，避免系统依赖冲突
-              main.py
-          else
-            pyinstaller --onefile --name "myapp-${{ needs.get-next-version.outputs.next_version }}-$env:OS_NAME" \
-              main.py
-          fi
-        shell: ${{ contains(matrix.os, 'windows') && 'pwsh' || 'bash' }}
-
-      - name: Upload artifacts
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: myapp-${{ needs.get-next-version.outputs.next_version }}-${{ matrix.os }}
+          name: myapp-${{ needs.get-next-version.outputs.next_version }}-windows
           path: dist/
 
   create-tag-and-release:
-    needs: [get-next-version, build-and-release]
+    needs: [get-next-version, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Download all artifacts
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
+        with:
+          name: myapp-${{ needs.get-next-version.outputs.next_version }}-windows
 
       - name: Create Git tag
         run: |
@@ -112,9 +89,7 @@ jobs:
           name: Release ${{ needs.get-next-version.outputs.next_version }} (Win7 兼容)
           body: |
             自动发布版本 ${{ needs.get-next-version.outputs.next_version }}
-            支持 Windows 7（基于 Python 3.8）和 Linux 系统
-          files: |
-            myapp-${{ needs.get-next-version.outputs.next_version }}-ubuntu-latest/*
-            myapp-${{ needs.get-next-version.outputs.next_version }}-windows-latest/*
+            仅包含 Windows 版本（支持 Windows 7）
+          files: myapp-${{ needs.get-next-version.outputs.next_version }}-windows/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
