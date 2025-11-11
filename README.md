@@ -20,18 +20,8 @@ ExamCountdown 是一款基于 Python Tkinter 开发的轻量考试倒计时工�
 - 依赖库：无额外第三方库（基于 Python 标准库  tkinter 、 json 、 datetime  开发）
 - 运行方式：直接运行  main.py ，无需安装额外依赖
  
-## 3、文件结构
  
-plaintext  
-ExamCountdown/
-├─ main.py          # 核心程序文件（包含所有功能逻辑）
-├─ exam_schedule.json  # 多日考试数据存储文件（自动生成）
-└─ README.md        # 使用说明文档
- 
- 
--  exam_schedule.json ：自动存储多日考试信息，删除后会丢失历史数据，请勿随意修改文件格式。
- 
-## 4.核心功能使用说明
+## 3.核心功能使用说明
  
 1. 主界面介绍
  
