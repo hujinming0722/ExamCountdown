@@ -51,7 +51,7 @@ jobs:
       - name: Package with pyinstaller (Win7 兼容)
         run: |
           $nextVersion = "${{ needs.get-next-version.outputs.next_version }}"
-          pyinstaller --onefile --name "myapp-$nextVersion-windows" --win-private-assemblies main.py
+          pyinstaller -w --onefile --name "ExamCoutndown-$nextVersion-windows" --win-private-assemblies main.py
         shell: pwsh
 
       - name: Upload Windows artifact
