@@ -60,36 +60,4 @@ jobs:
           name: myapp-${{ needs.get-next-version.outputs.next_version }}-windows
           path: dist/
 
-  create-tag-and-release:
-    needs: [get-next-version, build-windows]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: myapp-${{ needs.get-next-version.outputs.next_version }}-windows
-
-      - name: Create Git tag
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git tag ${{ needs.get-next-version.outputs.next_version }}
-          git push origin ${{ needs.get-next-version.outputs.next_version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.get-next-version.outputs.next_version }}
-          name: Release ${{ needs.get-next-version.outputs.next_version }} (Win7 兼容)
-          body: |
-            自动发布版本 ${{ needs.get-next-version.outputs.next_version }}
-            仅包含 Windows 版本（支持 Windows 7）
-          files: myapp-${{ needs.get-next-version.outputs.next_version }}-windows/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
